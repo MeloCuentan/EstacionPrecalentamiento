@@ -8,7 +8,7 @@ Componentes utilizados:
 - Arduino NANO
 - Placa calefactora PTC 500W 20cm x 10cm
 - Termistor NTC 100K 3950
-- Resistencia PULLUP de 4K7
+- Resistencia PULLUP de 4K7 para el termistor
 - Condensadores de 10nF (irá en paralelo con la resistencia de 4K7)
 - Condensador de 22uF/16V (irá en paralelo con la resistencia de 4K7)
 - Display LCD2004 con placa adaptadora I2C
