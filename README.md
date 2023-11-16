@@ -13,6 +13,7 @@ Componentes utilizados:
 - Condensador de 22uF/16V (irá en paralelo con la resistencia de 4K7)
 - Display LCD2004 con placa adaptadora I2C
 - SSR10-DA (10A)
+- Cargador de móvil (esto será para sacar la placa y alimentar al arduino NANO y LCD
 
 
 Los tornillos que van puestos en la placa calentadora, se calientan bastante, así que la mejor solución ha sido poner dos trozos de madera como placa intermedia.
