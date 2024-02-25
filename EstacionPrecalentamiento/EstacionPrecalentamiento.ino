@@ -1,13 +1,14 @@
 #include <Wire.h>
-#include <PID_v1.h>     // https://github.com/br3ttb/Arduino-PID-Library/tree/master
-#include "sonda3950.h"  // https://github.com/MeloCuentan/termistor3950/tree/main
-#include <LiquidCrystal_I2C.h>
+#include <PID_v1.h>             // https://github.com/br3ttb/Arduino-PID-Library/tree/master
+#include "sonda3950.h"          // https://github.com/MeloCuentan/termistor3950/tree/main
+#include <LiquidCrystal_I2C.h>  // https://github.com/johnrickman/LiquidCrystal_I2C
+#include <RotaryEncoder.h>      //https://github.com/mathertel/RotaryEncoder
 
 // Valores de los pines utilizados
 const uint8_t pinTermistor = A3;
 const uint8_t pinSSR = 9;
-const uint8_t pinEN1 = 2;
-const uint8_t pinEN2 = 3;
+const uint8_t pinEN1 = 3;
+const uint8_t pinEN2 = 2;
 const uint8_t pinBoton = 4;
 
 // Valores del PID
@@ -45,12 +46,13 @@ volatile bool lecturaEnc = false;
 LiquidCrystal_I2C lcd(SCREEN_ADDRESS, SCREEN_WIDTH, SCREEN_HEIGHT);
 sonda3950 termistor(pinTermistor, adcResolucion, rPullUp, rTermistor);
 PID myPID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
+RotaryEncoder encoder(pinEN1, pinEN2, RotaryEncoder::LatchMode::FOUR3);
 
 void setup() {
-  Serial.begin(115200);
-
   Setpoint = temperaturaInicio;
   valorEncoder = Setpoint;
+
+  encoder.setPosition(temperaturaInicio);
   myPID.SetMode(AUTOMATIC);
   myPID.SetOutputLimits(0, 20);
 
@@ -61,13 +63,7 @@ void setup() {
 
   buffer[0] = '\0';
 
-  pinMode(pinEN1, INPUT_PULLUP);
-  pinMode(pinEN2, INPUT_PULLUP);
   pinMode(pinBoton, INPUT_PULLUP);
-
-  attachInterrupt(digitalPinToInterrupt(pinEN1), movimientoEncoder, FALLING);
-  attachInterrupt(digitalPinToInterrupt(pinEN2), movimientoEncoder, FALLING);
-
 
   pantallaInicio();
 }
@@ -79,31 +75,6 @@ void loop() {
   controlLimitesPID();
   PID();
   mostrarDisplay();
-}
-
-void mostrarSerial() {
-  static uint32_t inicioSerial, intervaloSerial = 100;
-  if (millis() - inicioSerial >= intervaloSerial) {
-    inicioSerial = millis();
-    Serial.print("0,");
-    Serial.print("250,");
-    Serial.print(Setpoint);
-    Serial.print(",");
-    Serial.print(valorSonda);
-    Serial.print(",");
-    Serial.println(Output);
-  }
-}
-
-void movimientoEncoder() {
-  if (lecturaEnc == true) {
-    lecturaEnc = false;
-    if (digitalRead(pinEN1) == HIGH && digitalRead(pinEN2) == LOW) {
-      moveEnc = 1;
-    } else if (digitalRead(pinEN1) == LOW && digitalRead(pinEN2) == HIGH) {
-      moveEnc = 2;
-    }
-  }
 }
 
 void PID() {
@@ -145,18 +116,16 @@ void medirTemperatura() {
 
 void comprobarEncoder() {
   static uint32_t tiempoDebounce, intervaloDebounce = 250;
-  if (moveEnc == 1) {
-    tiempoDebounce = millis();
-    moveEnc = 0;
-    valorEncoder--;
-    if (valorEncoder < temperaturaMinima) valorEncoder = temperaturaMinima;
-  } else if (moveEnc == 2) {
-    tiempoDebounce = millis();
-    moveEnc = 0;
-    valorEncoder++;
-    if (valorEncoder > temperaturaMaxima) valorEncoder = temperaturaMaxima;
+  encoder.tick();
+
+  valorEncoder = encoder.getPosition();
+  if (valorEncoder < temperaturaMinima) {
+    encoder.setPosition(temperaturaMinima);
+    valorEncoder = temperaturaMinima;
+  } else if (valorEncoder > temperaturaMaxima) {
+    encoder.setPosition(temperaturaMaxima);
+    valorEncoder = temperaturaMaxima;
   }
-  if (digitalRead(pinEN1) == HIGH && digitalRead(pinEN2) == true) lecturaEnc = true;
 
   if (valorEncoder != valorEncoderAnterior) {
     valorEncoderAnterior = valorEncoder;
@@ -198,7 +167,7 @@ void scrollMensaje() {
 }
 
 void mostrarDisplay() {
-  static uint32_t tiempoAnterior, intervalo = 250;
+  static uint32_t tiempoAnterior, intervalo = 200;
   static uint8_t posicionMensaje = SCREEN_WIDTH;
   if (millis() - tiempoAnterior >= intervalo) {
     tiempoAnterior = millis();
