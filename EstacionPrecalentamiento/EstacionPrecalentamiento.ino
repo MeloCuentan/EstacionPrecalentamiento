@@ -2,7 +2,7 @@
 #include <PID_v1.h>             // https://github.com/br3ttb/Arduino-PID-Library/tree/master
 #include "sonda3950.h"          // https://github.com/MeloCuentan/termistor3950/tree/main
 #include <LiquidCrystal_I2C.h>  // https://github.com/johnrickman/LiquidCrystal_I2C
-#include <RotaryEncoder.h>      //https://github.com/mathertel/RotaryEncoder
+#include <RotaryEncoder.h>      // https://github.com/mathertel/RotaryEncoder
 
 // Valores de los pines utilizados
 const uint8_t pinTermistor = A3;
